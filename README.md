@@ -1,26 +1,47 @@
 # AutoCover · Smart Vehicle Insurance Comparison Platform
 
-[![Backend Tests](https://img.shields.io/badge/pytest-16%20passed-emerald)](file:///backend/tests)
-[![Frontend](https://img.shields.io/badge/React%2019-TypeScript%20%2B%20Tailwind-blue)](file:///frontend)
-[![FastAPI](https://img.shields.io/badge/FastAPI-Python%203.11%2B-009688)](file:///backend)
+> **Technical Round Assignment Submission: Full-Stack Engineering Intern**  
+> **Author:** **Rupali Goyal**  
+> **GitHub:** [@93527Rupali38898](https://github.com/93527Rupali38898)  
+> **Repository:** [https://github.com/93527Rupali38898/autocover](https://github.com/93527Rupali38898/autocover)
+
+[![Backend Tests](https://img.shields.io/badge/pytest-16%20passed-emerald)](backend/tests)
+[![Frontend](https://img.shields.io/badge/React%2019-TypeScript%20%2B%20Tailwind-blue)](frontend)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Python%203.11%2B-009688)](backend)
 [![License](https://img.shields.io/badge/License-MIT-slate)](LICENSE)
 
 **AutoCover** is an end-to-end car insurance aggregation and comparison platform. A customer enters their vehicle registration number once; AutoCover retrieves verified registry details, collects quotes concurrently from four simulated insurance providers exposing disparate data formats (JSON REST API, dynamic JavaScript-rendered HTML, downloadable PDF Rate Card, and CSV batch exports), normalizes messy data into a canonical structure, maps add-ons using an industry glossary, and presents an interactive side-by-side comparison with intelligent **Value for Money** ranking and policy lifecycle management.
 
 ---
 
-## 1. Quick Start & Setup Instructions
+## 1. Application Screenshots & Visual Walkthrough
+
+### Vehicle Lookup & Verified Registry Card
+The user enters any Indian vehicle registration number (or clicks a sample test profile like *Rahul Sen* or *Arjun Mehta*). The app sanitizes the input, queries the registry, and displays verified vehicle specifications with inline correction capability.
+
+![AutoCover Vehicle Lookup and Registry Verification](screenshots/vehicle_lookup.png)
+
+---
+
+### Provider Resilience Monitor & Multi-Plan Comparison
+AutoCover queries all 4 insurance providers concurrently over HTTP. Notice the live latency measurement (Provider B's simulated ~1.5s delay) and resilience controls (simulate 503 outage on Provider A without crashing the UI). Below the monitor, plans are ranked with the multi-factor **Value for Money Score** and GST breakdowns.
+
+![AutoCover Provider Monitor and Plan Comparison](screenshots/comparison_results.jpg)
+
+---
+
+## 2. Quick Start & Setup Instructions
 
 Follow these exact steps to run the application on any fresh machine:
 
 ### Prerequisites
-- **Python 3.10+** (verified on Python 3.11)
-- **Node.js 18+** & **npm 9+** (verified on Node v24 & npm 11)
+- **Python 3.10+** (tested on Python 3.11)
+- **Node.js 18+** & **npm 9+** (tested on Node v24 & npm 11)
 - **Git**
 
 ---
 
-### Step 1: Clone or Open the Repository
+### Step 1: Clone the Repository
 ```bash
 git clone https://github.com/93527Rupali38898/autocover.git
 cd autocover
@@ -30,30 +51,19 @@ cd autocover
 
 ### Step 2: Backend Setup & Run
 
-1. **Create and activate a virtual environment (recommended):**
-   ```bash
-   # Windows (PowerShell)
-   python -m venv venv
-   .\venv\Scripts\Activate.ps1
-
-   # macOS / Linux
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-
-2. **Install Python dependencies:**
+1. **Install Python dependencies:**
    ```bash
    pip install -r backend/requirements.txt
    ```
 
-3. **Configure Environment Variables:**
+2. **Configure Environment Variables:**
    ```bash
    # Copy sample environment configuration
    cp .env.example .env
    ```
-   *(By default, `autocover.db` SQLite is used for zero-configuration setup. PostgreSQL is supported by changing `DATABASE_URL` in `.env`)*.
+   *(By default, `autocover.db` SQLite is used for zero-configuration setup. PostgreSQL is supported by updating `DATABASE_URL` in `.env`)*.
 
-4. **Start the Backend Server:**
+3. **Start the Backend Server:**
    ```bash
    python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
    ```
@@ -68,7 +78,7 @@ cd autocover
 
 ### Step 3: Frontend Setup & Run
 
-1. **Open a new terminal window and navigate to `frontend/`:**
+1. **In a second terminal window, navigate to `frontend/`:**
    ```bash
    cd frontend
    ```
@@ -96,7 +106,7 @@ python -m pytest backend/tests -v
 
 ---
 
-## 2. Core Architecture & Workflow
+## 3. Core Architecture & Workflow
 
 ```mermaid
 flowchart TD
@@ -123,7 +133,7 @@ flowchart TD
 
 ---
 
-## 3. Data Sources & Investigation Summary
+## 4. Data Sources & Investigation Summary
 
 | Source | File Format | Investigation Findings & Parsing Strategy |
 |---|---|---|
@@ -136,9 +146,9 @@ flowchart TD
 
 ---
 
-## 4. Add-on Normalization & Insurer Glossary
+## 5. Add-on Normalization & Insurer Glossary
 
-Insurance providers employ inconsistent terminology for identical coverage concepts. Following Section 3.3, we researched the official public add-on pages of **three major Indian general insurers**:
+Insurance providers employ inconsistent terminology for identical coverage concepts. Following Section 3.3 of the assignment, we researched the official public add-on pages of **three major Indian general insurers**:
 
 1. **HDFC ERGO General Insurance:** [hdfcergo.com/car-insurance/add-on-covers](https://www.hdfcergo.com/car-insurance/add-on-covers)
 2. **Digit General Insurance:** [godigit.com/motor-insurance/car-insurance/add-on-covers](https://www.godigit.com/motor-insurance/car-insurance/add-on-covers)
@@ -157,7 +167,7 @@ Insurance providers employ inconsistent terminology for identical coverage conce
 
 ---
 
-## 5. Value for Money Ranking Logic
+## 6. Value for Money Ranking Logic
 
 The assignment explicitly notes: **"Do not assume that the cheapest plan is automatically the best option."**
 AutoCover calculates an objective **Value for Money Score (0–100)** for every plan using three weighted components:
@@ -170,7 +180,7 @@ Plans are labeled with intuitive badges: `Best Value`, `Lowest Premium`, `Zero D
 
 ---
 
-## 6. Assumptions
+## 7. Assumptions
 
 1. **Reference Date:** `2026-11-10` is strictly treated as "today" across all quote expiration checks and policy renewal calculations (configured via `REFERENCE_DATE` environment variable).
 2. **Taxation:** GST is standardized at **18%**. For quotes that include taxes, net base premium is computed as $\text{Total} / 1.18$ and tax as $\text{Total} - \text{Base}$.
@@ -180,14 +190,14 @@ Plans are labeled with intuitive badges: `Best Value`, `Lowest Premium`, `Zero D
 
 ---
 
-## 7. Database Schema
+## 8. Database Schema
 
 - **`vehicles`:** `registration_number` (PK), `make`, `model`, `variant`, `fuel_type`, `engine_cc`, `registration_date`, `rto`, `ex_showroom_price`, `current_policy_expiry`, `ncb_percent`.
 - **`policies`:** `id` (PK), `policy_number` (Unique, e.g. `AC-2026-123456`), `customer_name`, `customer_phone`, `customer_email`, `registration_number`, `provider_code`, `provider_name`, `plan_name`, `coverage_type`, `idv`, `base_premium`, `gst_amount`, `total_premium`, `addons_json`, `policy_start_date`, `policy_expiry_date`, `status` (`ACTIVE`, `EXPIRING_SOON`).
 
 ---
 
-## 8. Resilience & Failure Simulation
+## 9. Resilience & Failure Simulation
 
 The UI provides toggle checkboxes to demonstrate system resilience under real-world network conditions:
 - **Simulate Provider A 503 Outage:** Injects an underwriting server failure; other providers continue working seamlessly.
@@ -197,3 +207,9 @@ The UI provides toggle checkboxes to demonstrate system resilience under real-wo
 
 ---
 
+## 10. Author & Contact
+
+- **Author:** **Rupali Goyal**
+- **GitHub:** [@93527Rupali38898](https://github.com/93527Rupali38898)
+- **Email:** [rupaligoyal382005@gmail.com](mailto:rupaligoyal382005@gmail.com)
+- **Role Applied:** Full-Stack Engineering Intern
