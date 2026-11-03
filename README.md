@@ -197,14 +197,3 @@ The UI provides toggle checkboxes to demonstrate system resilience under real-wo
 
 ---
 
-## 9. Deliverables & Submission Checklist
-
-- [x] Complete source code in new repository.
-- [x] Detailed setup and run instructions in `README.md`.
-- [x] Database schema & auto-seeding.
-- [x] Data source investigation and parsing implementations.
-- [x] Add-on glossary with public real insurer citations.
-- [x] 16 automated backend tests passing (`pytest backend/tests -v`).
-- [x] `AI_USAGE.md` documenting tools, sequential prompts, and fixes.
-- [x] Responsive React frontend with vehicle verification, comparison drawer, and policy dashboard.
-
