@@ -1,101 +1,288 @@
 # AI Usage & Pair-Programming Log (`AI_USAGE.md`)
 
-This log outlines how AI assistance (Google Antigravity / Gemini 3.8 Flash) was incorporated during the development of **AutoCover**. 
+This document describes how AI-assisted development tools were used during the development of **AutoCover**.
 
-As a senior-level development practice, AI tools were leveraged as a **productivity accelerator and technical pair-programmer**—specifically for rapid schema prototyping, boilerplate generation, regex pattern crafting, and expanding test fixture coverage. All architectural design, domain logic verification, failure handling, and code review were driven manually.
+Google Antigravity, powered by Gemini 3.8 Flash, was used as a development assistant for tasks such as schema prototyping, code generation, data parsing, regular expressions, API implementation, and test-case generation.
 
----
-
-## 1. Development Tools Used
-- **Primary AI Assistant:** Google Antigravity (Powered by Gemini 3.8 Flash)
-- **Role:** Technical Pair-Programmer (Data normalization logic, test scaffolding, and UI component drafting)
-- **Engine / CLI Environment:** PowerShell on Windows 11, Python 3.11, Node v24
+AI-generated code was reviewed, modified, and tested before being integrated into the project. Decisions involving application architecture, business rules, data validation, error handling, and implementation details were made during development.
 
 ---
 
-## 2. Chronological Prompt Sequence & Technical Decisions
+## 1. Development Environment
 
-### Stage 1: Domain Modeling & Canonical Schema Design
-* **Objective:** Define a unified data contract capable of harmonizing disparate insurance data formats (JSON, HTML DOM, PDF Rate Card, and CSV).
-* **Prompt 1.1:**
-  > *"Given the 4 raw provider schemas (A: JSON with variable taxes, B: HTML with dynamic window.__QUOTE_DATA__, C: Motor Tariff PDF rate card, D: CSV with mixed lakh/numeric IDVs), draft a normalized Pydantic V2 schema (`NormalizedPlan`) that standardizes: `idv`, `base_premium`, `gst_amount`, `total_premium`, canonical `addons`, `valid_until`, `is_expired`, and a 0-100 `value_score`."*
-* **What the AI Generated:**
-  - Initial Pydantic schemas with standard fields.
-* **Manual Review & Senior Corrections:**
-  - **Identified Pydantic v2 Deprecation:** The initial draft used legacy Pydantic v1 `class Config: from_attributes = True`. Refactored to Pydantic v2 `model_config = {"from_attributes": True}`.
-  - **GST Normalization:** Fixed a subtle tax calculation flaw in the AI draft. For quotes where `premium_includes_gst == True`, the base premium must be extracted using $\text{round}(\text{total} / 1.18)$ rather than simply subtracting 18% of the gross total.
+| Component | Details |
+|---|---|
+| AI Assistant | Google Antigravity |
+| AI Model | Gemini 3.8 Flash |
+| Operating System | Windows 11 |
+| Terminal | PowerShell |
+| Python | 3.11 |
+| Node.js | v24 |
+| Backend Framework | FastAPI |
+| Data Validation | Pydantic V2 |
+| HTTP Client | httpx |
+| Testing Framework | pytest |
 
----
-
-### Stage 2: Actuarial Rate Card Parsing & Calculation Engine (Provider C)
-* **Objective:** Implement the actuarial calculation engine based on the official 3-page India Motor Tariff Rate Card (`provider_c.pdf`).
-* **Prompt 2.1:**
-  > *"Inspect `provider_c.pdf` text extract. Write a Python rate calculation engine that computes: 1) IDV depreciation by vehicle age (<6m: 5%, 6m-1y: 15%, 1-2y: 20%, 2-3y: 30%, 3-4y: 40%, 4-5y: 50%, 5-8y: 50% + 5%/yr), 2) Model groups (Swift/i20/Tiago: G1, Nexon/City/Sonet: G2, Creta/XUV700: G3), 3) OD rate % minus NCB discount, 4) Third-party rates by CC tiers (<=1000, 1000-1500, >1500), and 5) C-Standard and C-Shield plans."*
-* **What the AI Generated:**
-  - A calculation function with depreciation brackets and model grouping.
-* **Manual Review & Senior Corrections:**
-  - **Vehicle Eligibility Boundary:** The AI output missed the explicit rate card constraint that *vehicles older than 8 years must be declined underwriting*. Added hard rejection boundary check returning `{"status": "DECLINED"}`.
-  - **Plan Eligibility:** Added rule ensuring `C-Shield` (Nil Dep, RSA, Consumables) is strictly restricted to vehicles $\le 5$ years old, as per tariff guidelines.
-  - **Unicode Ligature Fix:** During text extraction from PDF, Windows cp1252 stdout threw encoding exceptions on ligatures (`\ufb00`). Sanitized text streams and ensured UTF-8 encoding across file I/O.
+**AI Assistance Areas:**
+- Data schema design and normalization.
+- Python utility and parsing function generation.
+- Regex development for data extraction.
+- API and asynchronous service implementation.
+- Test-case and fixture generation.
+- Debugging and code improvement.
 
 ---
 
-### Stage 3: Data Sanitization & Ingestion Pipelines
-* **Objective:** Clean and normalize messy real-world inputs (registration formats, currency symbols, Lakh notation, and duplicate records).
-* **Prompt 3.1:**
-  > *"Write robust parsing utilities for Indian insurance data: 1) Clean registration numbers (strip whitespace, hyphens, and uppercase), 2) Parse IDV values supporting '3.1 L', '3.3 lakh', and raw integers, 3) Parse currency strings like '₹12,830' and '\"11,670\"', 4) Detect quote expiration relative to reference date 2026-11-10."*
-* **What the AI Generated:**
-  - Helper functions for regex substitution and date comparison.
-* **Manual Review & Senior Corrections:**
-  - **Deduplication Logic:** Added signature hashing `(provider, plan, idv, total_premium)` to prevent duplicate records found in Provider A (WB02AB1234) and Provider D (KL 07 DE 3030) from polluting the comparison view.
-  - **Date Robustness:** Enhanced the parser to handle both ISO (`YYYY-MM-DD`) and Indian date formats (`DD/MM/YYYY` and `DD-MM-YYYY`), as well as timezone-aware ISO timestamps.
+## 2. Development Process and AI Interaction Log
+
+### Stage 1: Domain Modeling and Normalized Schema
+
+**Objective:** Design a common data structure to handle insurance quotes received from four different providers with different data formats.
+
+**Prompt 1.1:**
+
+> I have four insurance providers returning data in different formats:
+> - Provider A: JSON containing variable tax fields.
+> - Provider B: HTML data containing dynamically generated quote information.
+> - Provider C: PDF containing motor insurance tariff rates.
+> - Provider D: CSV containing IDV values in different formats, including lakh notation and numeric values.
+>
+> Design a normalized Pydantic V2 schema named `NormalizedPlan` that can represent quotes from all four providers.
+>
+> Include fields for IDV, base premium, GST amount, total premium, add-ons, validity date, expiration status, and a value score between 0 and 100.
+>
+> Keep the schema reusable and make sure it supports data received from different providers without requiring provider-specific fields in the final comparison layer.
+
+**AI-generated output:**
+- Initial Pydantic model definitions.
+- Suggested field types and optional fields.
+- Initial data normalization structure.
+
+**Changes made during implementation:**
+- Updated the model configuration to use Pydantic V2 syntax (`model_config`) instead of the older V1 `class Config` approach.
+- Added consistent handling of optional fields across providers.
+- Corrected GST extraction for quotes where `premium_includes_gst` is true. The base premium is calculated using `round(total / 1.18)` rather than subtracting 18% of the gross amount.
+- Ensured that the normalized schema could be used by the comparison service without depending on the original provider response format.
 
 ---
 
-### Stage 4: Add-on Canonical Normalization & Real Insurer Glossary
-* **Objective:** Resolve inconsistent provider terminology against real-world insurer documentation.
-* **Prompt 4.1:**
-  > *"Research public add-on coverage documentation from HDFC ERGO, Digit, and ICICI Lombard. Create an alias dictionary mapping raw provider strings (e.g. 'Bumper to Bumper', 'Nil Depreciation', 'Total Cover', '24x7 Roadside Assistance', 'Engine & Gearbox Protection') to standardized canonical codes (`ZERO_DEP`, `RSA`, `ENGINE_PROTECT`, `RETURN_TO_INVOICE`, `KEY_REPLACEMENT`, `CONSUMABLES`). Include source URLs and reference dates."*
-* **What the AI Generated:**
-  - Glossary mapping table with citation metadata.
-* **Manual Review & Senior Corrections:**
-  - Verified and cross-checked live URLs against insurer web policies.
-  - Added fallback mapping so any unrecognized custom add-on gracefully titles without breaking the parser.
+### Stage 2: Motor Tariff PDF Parsing and Calculation Engine
+
+**Objective:** Implement the insurance calculation logic using the official three-page India Motor Tariff Rate Card provided in `provider_c.pdf`.
+
+**Prompt 2.1:**
+
+> Inspect the extracted contents of `provider_c.pdf` and help implement a Python rate calculation module.
+>
+> The module should calculate:
+> 1. IDV depreciation based on vehicle age:
+>    - Below 6 months: 5%
+>    - 6 months to 1 year: 15%
+>    - 1–2 years: 20%
+>    - 2–3 years: 30%
+>    - 3–4 years: 40%
+>    - 4–5 years: 50%
+>    - 5–8 years: 50% plus 5% per additional year.
+> 2. Vehicle model grouping:
+>    - Swift, i20, Tiago: G1
+>    - Nexon, City, Sonet: G2
+>    - Creta, XUV700: G3
+> 3. Own Damage (OD) premium calculation with applicable NCB discount.
+> 4. Third-party premium calculation using engine CC categories.
+> 5. Calculation of C-Standard and C-Shield insurance plans.
+>
+> Keep the calculation logic separate from the API routes and make the functions reusable and easy to test.
+
+**AI-generated output:**
+- Initial depreciation calculation functions.
+- Vehicle model grouping logic.
+- Premium calculation structure.
+- Initial implementation of insurance plan calculations.
+
+**Changes made during implementation:**
+- Added an underwriting rejection condition for vehicles older than eight years, returning `{"status": "DECLINED"}`.
+- Added an eligibility check restricting C-Shield coverage (Nil Depreciation, RSA, and Consumables) to vehicles that are five years old or younger.
+- Reviewed the depreciation brackets and calculation boundaries against the supplied tariff information.
+- Fixed a Unicode encoding issue encountered while extracting PDF text on Windows. The extracted content contained ligature characters such as `\ufb00`, which caused errors with the default Windows console encoding.
+- Standardized file and text handling to UTF-8.
 
 ---
 
-### Stage 5: Concurrent Aggregation & Microservice Resilience
-* **Objective:** Aggregate all 4 provider services asynchronously with isolated failure domains.
-* **Prompt 5.1:**
-  > *"Implement `QuoteAggregatorService` using `httpx.AsyncClient` and `asyncio.gather` to collect quotes from 4 mock provider endpoints concurrently. Ensure individual provider timeouts, error isolation (HTTP 503 or 500 on one provider does not fail the batch), and round-trip latency tracking in milliseconds."*
-* **What the AI Generated:**
-  - Async gathering loop with `httpx`.
-* **Manual Review & Senior Corrections:**
-  - **In-Process ASGI Transport Optimization:** For automated testing and single-process reviews, raw TCP calls to `127.0.0.1:8000` inside test suites can cause socket deadlocks. Architected an auto-detecting fallback to `httpx.ASGITransport(app=mock_app)`. This allows the application and test suite to run with zero socket latency while still supporting standalone microservice execution on port 8001.
+### Stage 3: Data Cleaning and Provider Ingestion
+
+**Objective:** Build reusable parsing utilities to handle inconsistent values and formats received from insurance providers.
+
+**Prompt 3.1:**
+
+> Create reusable Python parsing utilities for Indian motor insurance data.
+>
+> Implement functions for:
+> 1. Cleaning vehicle registration numbers by removing spaces and hyphens and converting them to uppercase.
+> 2. Parsing IDV values in formats such as `3.1 L`, `3.3 lakh`, and raw integers.
+> 3. Cleaning currency values such as `₹12,830` and `"11,670"`.
+> 4. Checking whether an insurance quote has expired using a reference date of 2026-11-10.
+> 5. Handling missing or invalid values without causing the complete ingestion process to fail.
+>
+> Use appropriate regular expressions and keep the functions independent so they can be tested separately.
+
+**AI-generated output:**
+- Initial regex patterns for registration numbers.
+- Currency and IDV parsing functions.
+- Date comparison utilities.
+
+**Changes made during implementation:**
+- Added duplicate detection using a signature consisting of `(provider, plan, idv, total_premium)`.
+- Used the signature to prevent duplicate records from appearing in the comparison results, including records associated with Provider A (`WB02AB1234`) and Provider D (`KL 07 DE 3030`).
+- Extended date parsing to support ISO dates (`YYYY-MM-DD`), Indian date formats (`DD/MM/YYYY`, `DD-MM-YYYY`), and timezone-aware ISO timestamps.
+- Added handling for empty values and unexpected input formats.
 
 ---
 
-### Stage 6: Value for Money Ranking Algorithm
-* **Objective:** Establish an objective ranking metric so customers understand why the lowest price isn't necessarily the best choice.
-* **Prompt 6.1:**
-  > *"Write a scoring function that calculates a 0-100 Value Score based on: 1) Premium competitiveness (40%), 2) IDV asset coverage efficiency (35%), 3) Richness of included high-value add-ons like Zero Dep and RSA (25%), with a 20-point penalty for expired quotes. Assign badges: 'Best Value', 'Lowest Premium', 'Zero Dep Included', 'Max IDV'."*
-* **Manual Review & Senior Corrections:**
-  - Tuned the weighting to ensure high-coverage comprehensive plans with Zero Dep outperform barebones third-party plans on overall value, directly satisfying core assignment requirements.
+### Stage 4: Add-on Normalization and Insurer Terminology
+
+**Objective:** Standardize insurance add-on names so that equivalent coverage options from different providers can be compared consistently.
+
+**Prompt 4.1:**
+
+> Research publicly available add-on coverage terminology used by HDFC ERGO, Digit, and ICICI Lombard.
+>
+> Create a Python alias dictionary that maps different provider-specific names to common add-on codes.
+>
+> Include mappings for:
+> - Bumper to Bumper / Nil Depreciation → `ZERO_DEP`
+> - 24x7 Roadside Assistance → `RSA`
+> - Engine & Gearbox Protection → `ENGINE_PROTECT`
+> - Return to Invoice → `RETURN_TO_INVOICE`
+> - Key Replacement → `KEY_REPLACEMENT`
+> - Consumables Cover → `CONSUMABLES`
+>
+> Keep the mapping extensible so additional provider-specific names can be added later. Also include source URLs and reference dates for the terminology used.
+
+**AI-generated output:**
+- Initial add-on alias dictionary.
+- Suggested canonical codes.
+- Initial mapping of common insurance terminology.
+
+**Changes made during implementation:**
+- Cross-checked the terminology against publicly available insurer documentation.
+- Updated aliases where provider terminology differed.
+- Added a fallback mechanism for unrecognized add-ons so their original names could still be displayed instead of causing normalization errors.
+- Kept canonical add-on codes consistent across all provider responses.
 
 ---
 
-### Stage 7: Comprehensive Automated Test Suite
-* **Objective:** Build a regression suite ensuring 100% test pass rate across parsing, tariff math, and API endpoints.
-* **Prompt 7.1:**
-  > *"Write a comprehensive pytest test suite covering: 1) `test_parsers.py` (Lakh parsing, currency sanitization, expired dates, deduplication), 2) `test_rate_card.py` (C-Standard math, C-Shield add-ons, 8-year age decline, 5-year shield cutoff), and 3) `test_api.py` (FastAPI test client endpoints for vehicles, comparison, and policy lifecycle)."*
-* **Verification:**
-  - Executed `pytest backend/tests -v` $\to$ **All 16 tests passed cleanly in under 5 seconds**.
+### Stage 5: Asynchronous Quote Aggregation and Error Handling
+
+**Objective:** Fetch insurance quotes from four provider services concurrently while handling individual provider failures independently.
+
+**Prompt 5.1:**
+
+> Implement a `QuoteAggregatorService` using Python's `httpx.AsyncClient`, `asyncio.gather`, and asynchronous request handling.
+>
+> The service should:
+> 1. Send requests to four mock insurance provider endpoints concurrently.
+> 2. Support individual request timeouts.
+> 3. Handle HTTP 500, HTTP 503, connection errors, and timeout exceptions independently.
+> 4. Return successful provider responses even when another provider fails.
+> 5. Record the response time of each provider in milliseconds.
+>
+> Avoid allowing one provider's failure to interrupt the complete quote aggregation process.
+>
+> Also consider how the service can be tested using FastAPI's ASGI transport without requiring an external server process.
+
+**AI-generated output:**
+- Initial asynchronous aggregation implementation.
+- Concurrent request execution using `asyncio.gather`.
+- Basic exception handling and latency measurement.
+
+**Changes made during implementation:**
+- Added isolated exception handling for individual provider requests.
+- Ensured that unsuccessful provider responses did not prevent other quotes from being returned.
+- Used `httpx.ASGITransport(app=mock_app)` for in-process testing to avoid unnecessary network requests and socket-related issues.
+- Kept support for standalone service execution through HTTP endpoints.
+- Added response-time tracking for individual providers.
 
 ---
 
-## 3. Engineering Philosophy & Quality Control
+### Stage 6: Value-for-Money Scoring and Ranking
 
-Throughout this assignment, AI was utilized strictly under rigorous human engineering supervision:
-1. **Zero Hallucination Tolerance:** All quote prices and vehicle registries strictly derive from the provided test files—no mocked external rates or fictitious quote forms were permitted.
-2. **Defensive Programming:** Every external provider response is wrapped in boundary validation, ensuring an outage in one provider never disrupts user experience.
-3. **Production-Ready Code Standards:** Type hints throughout Python (`pydantic`, `typing`) and TypeScript (`verbatimModuleSyntax`, strict interfaces), clear docstrings, and comprehensive documentation.
+**Objective:** Develop a scoring mechanism that helps users compare insurance plans based on overall coverage and cost rather than considering only the lowest premium.
+
+**Prompt 6.1:**
+
+> Implement a Python function that calculates a Value Score between 0 and 100 for normalized insurance plans.
+>
+> Use the following weighted factors:
+> 1. Premium competitiveness: 40%
+> 2. IDV coverage efficiency: 35%
+> 3. Included high-value add-ons, such as Zero Depreciation and RSA: 25%
+>
+> Apply a 20-point penalty to expired quotes.
+>
+> Also implement badges for:
+> - Best Value
+> - Lowest Premium
+> - Zero Dep Included
+> - Max IDV
+>
+> Make sure the ranking logic considers the overall coverage offered by a plan and does not automatically rank the cheapest insurance plan as the best option.
+
+**AI-generated output:**
+- Initial weighted scoring function.
+- Suggested ranking conditions.
+- Badge assignment logic.
+
+**Changes made during implementation:**
+- Adjusted the scoring calculations to make comparisons more meaningful across plans.
+- Ensured that add-on coverage contributes to the overall value score.
+- Added the expired quote penalty.
+- Reviewed the ranking behavior to ensure comprehensive plans with useful add-ons could rank higher than basic plans with lower premiums.
+- Kept individual badges separate from the overall ranking score.
+
+---
+
+### Stage 7: Automated Testing and Regression Checks
+
+**Objective:** Generate and execute test cases covering data parsing, premium calculations, and API functionality.
+
+**Prompt 7.1:**
+
+> Create a pytest test suite for the AutoCover backend.
+>
+> Organize the tests into three files:
+>
+> **1. `test_parsers.py`**
+> - IDV parsing for lakh notation and numeric values.
+> - Currency string sanitization.
+> - Registration number normalization.
+> - Expired quote detection.
+> - Duplicate record detection.
+>
+> **2. `test_rate_card.py`**
+> - C-Standard premium calculations.
+> - C-Shield add-on calculations.
+> - Vehicle rejection for age greater than eight years.
+> - C-Shield eligibility for vehicles up to five years old.
+> - Depreciation boundary conditions.
+>
+> **3. `test_api.py`**
+> - FastAPI test client functionality.
+> - Vehicle-related endpoints.
+> - Insurance comparison endpoint.
+> - Policy lifecycle endpoints.
+>
+> Use appropriate test fixtures and include both valid and invalid input scenarios. Make sure the tests can run without depending on external provider services.
+
+**AI-generated output:**
+- Initial pytest test cases.
+- Reusable fixtures.
+- API endpoint test structure.
+- Test data for different provider scenarios.
+
+**Verification and changes:**
+- Reviewed the generated test cases against the implemented business rules.
+- Added boundary and invalid-input scenarios.
+- Executed the test suite using:
+
+```bash
+pytest backend/tests -v
