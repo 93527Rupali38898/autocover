@@ -59,6 +59,15 @@ app.add_middleware(
 # Mount mock provider service directly for seamless single-process or multi-process execution
 app.mount("/mock", mock_app)
 
+@app.get("/")
+def root():
+    return {
+        "message": "AutoCover Insurance Comparison API is running!",
+        "docs": "http://127.0.0.1:8000/docs",
+        "frontend": "http://localhost:5173",
+        "health": "http://127.0.0.1:8000/api/health"
+    }
+
 @app.get("/api/health")
 def health_check():
     return {
