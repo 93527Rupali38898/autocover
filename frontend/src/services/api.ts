@@ -104,3 +104,4 @@ export async function seedDemoPolicies(): Promise<{ message: string }> {
   });
   return res.json();
 }
+

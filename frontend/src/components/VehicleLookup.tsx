@@ -111,3 +111,4 @@ export const VehicleLookup: React.FC<VehicleLookupProps> = ({
     </div>
   );
 };
+

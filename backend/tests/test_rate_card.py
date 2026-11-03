@@ -76,3 +76,4 @@ def test_rate_card_no_shield_for_older_than_5_years():
     plan_names = [p["plan_name"] for p in res["plans"]]
     assert "C-Standard" in plan_names
     assert "C-Shield" not in plan_names
+

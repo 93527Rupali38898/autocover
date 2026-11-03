@@ -149,3 +149,4 @@ export const AddonGlossaryModal: React.FC<AddonGlossaryModalProps> = ({
     </div>
   );
 };
+

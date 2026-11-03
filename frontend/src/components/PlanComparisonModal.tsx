@@ -178,3 +178,4 @@ export const PlanComparisonModal: React.FC<PlanComparisonModalProps> = ({
     </div>
   );
 };
+

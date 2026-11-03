@@ -192,3 +192,4 @@ def get_glossary_data() -> Dict[str, Any]:
         "sources": GLOSSARY_SOURCES,
         "standard_addons": STANDARD_ADDONS
     }
+

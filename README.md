@@ -207,3 +207,4 @@ The UI provides toggle checkboxes to demonstrate system resilience under real-wo
 - [x] 16 automated backend tests passing (`pytest backend/tests -v`).
 - [x] `AI_USAGE.md` documenting tools, sequential prompts, and fixes.
 - [x] Responsive React frontend with vehicle verification, comparison drawer, and policy dashboard.
+

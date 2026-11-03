@@ -18,3 +18,4 @@ MOCK_PROVIDER_URL = os.getenv("MOCK_PROVIDER_URL", "http://127.0.0.1:8001")
 # Provider simulation behavior
 SIMULATE_SLOW_PROVIDERS = os.getenv("SIMULATE_SLOW_PROVIDERS", "true").lower() in ("true", "1", "yes")
 SIMULATE_FAILURES = os.getenv("SIMULATE_FAILURES", "false").lower() in ("true", "1", "yes")
+

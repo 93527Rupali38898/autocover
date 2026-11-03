@@ -122,3 +122,4 @@ export interface GlossaryData {
   sources: GlossarySource[];
   standard_addons: Record<string, StandardAddonInfo>;
 }
+

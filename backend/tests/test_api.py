@@ -80,3 +80,4 @@ def test_compare_quotes():
     plans = data["plans"]
     assert any("Best Value" in p["badges"] for p in plans)
     assert any("Lowest Premium" in p["badges"] for p in plans)
+

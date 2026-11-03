@@ -111,3 +111,4 @@ class RegistryService:
             customers=[],
             also_try=[]
         )
+

@@ -62,3 +62,4 @@ def test_addon_glossary_normalization():
 
     # Consumables
     assert normalize_addon_name("Consumables").code == "CONSUMABLES"
+

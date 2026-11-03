@@ -85,3 +85,4 @@ Every line of code in this repository was inspected, tested, and validated to en
 1. Strict adherence to prompt constraints (all plan prices originate from provided files, reference date 10 Nov 2026 IST).
 2. Proper error isolation (a failure in Provider A or Provider D never crashes the entire quote comparison).
 3. Zero-friction setup on fresh machines using SQLite by default with PostgreSQL configuration capability.
+

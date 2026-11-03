@@ -41,3 +41,4 @@ class PolicyModel(Base):
     policy_expiry_date = Column(String(20), nullable=False)
     status = Column(String(30), default="ACTIVE")
     created_at = Column(DateTime, default=datetime.utcnow)
+
