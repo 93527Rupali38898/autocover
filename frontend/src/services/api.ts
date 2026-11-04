@@ -6,7 +6,7 @@ import {
   GlossaryData
 } from '../types';
 
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api';
 
 export async function fetchVehicle(regNo: string): Promise<Vehicle> {
   const res = await fetch(`${API_BASE}/vehicles/${encodeURIComponent(regNo)}`);
