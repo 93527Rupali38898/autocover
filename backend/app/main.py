@@ -278,3 +278,12 @@ def seed_demo_policies(db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Demo policies seeded successfully"}
+
+# Mount frontend static distribution if built (must be after all API routes)
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+
+dist_dir = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+if dist_dir.exists():
+    app.mount("/", StaticFiles(directory=str(dist_dir), html=True), name="static")
+
