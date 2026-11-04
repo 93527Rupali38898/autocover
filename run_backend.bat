@@ -9,3 +9,4 @@ for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8000 ^| findstr LISTENING') 
 echo Starting Uvicorn...
 python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 pause
+
